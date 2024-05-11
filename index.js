@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -30,6 +30,28 @@ async function run() {
 
     const queryCollection = client.db('AltChoiceDB').collection('query');
     const recommendationCollection = client.db('AltChoiceDB').collection('recommendation');
+
+    //get all query data
+    app.get('/query', async (req, res) => {
+      const result = await queryCollection.find().toArray();
+      res.send(result);
+    })
+
+    //get my query by email
+    app.get('/my-query/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {'queryUser.email' : email};
+      const result = await queryCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    //get single query by id
+    app.get('/view-details/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+      const result = await queryCollection.findOne(query);
+      res.send(result)
+    })
 
     //post all query
     app.post('/query', async (req, res) => {
