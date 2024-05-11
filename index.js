@@ -45,13 +45,7 @@ async function run() {
       res.send(result)
     })
 
-    //get single query by id
-    app.get('/view-details/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = {_id : new ObjectId(id)};
-      const result = await queryCollection.findOne(query);
-      res.send(result)
-    })
+    
 
     //post all query
     app.post('/query', async (req, res) => {
