@@ -46,7 +46,7 @@ async function run() {
     })
 
     //get single query by id
-    app.get('/view-details/:id', async (req, res) => {
+    app.get('/query/:id', async (req, res) => {
       const id = req.params.id;
       const query = {_id : new ObjectId(id)};
       const result = await queryCollection.findOne(query);
@@ -58,6 +58,21 @@ async function run() {
         const queryData = req.body;
         const result = await queryCollection.insertOne(queryData)
         res.send(result);
+    })
+
+    //update query 
+    app.put('/update-query/:id', async (req, res) => {
+      const id = req.params.id;
+      const queryData = req.body
+      const filter = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const updateDoc = {
+        $set: {
+          ...queryData
+        }
+      }
+      const result = await queryCollection.updateOne(filter,updateDoc, options);
+      res.send(result);
     })
 
 
