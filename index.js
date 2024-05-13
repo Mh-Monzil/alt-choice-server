@@ -59,6 +59,22 @@ async function run() {
       res.send(result);
     });
 
+    //get recommendations by id
+    app.get("/recommendations/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {queryId: id};
+      const result = await recommendationCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    //get recommendations by email
+    app.get("/recommendations/user-email/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = {recommenderEmail: email};
+      const result = await recommendationCollection.find(query).toArray();
+      res.send(result);
+    })
+
     //post all query
     app.post("/query", async (req, res) => {
       const queryData = req.body;
@@ -72,10 +88,10 @@ async function run() {
       const result = await recommendationCollection.insertOne(recommendedData);
       res.send(result);
     });
+
     // increment recommendation count
     app.post("/increment/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const result = await queryCollection.updateOne(
         { _id: new ObjectId(id) },
         {
@@ -85,6 +101,20 @@ async function run() {
         }
       );
       res.status(200).json(result);
+    });
+
+    //decrement recommendation count
+    app.post("/decrement/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await queryCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $inc: {
+            recommendationCount: -1,
+          },
+        }
+      );
+      res.send(result);
     });
 
     //update query
@@ -111,6 +141,14 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await queryCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //delete recommendation
+    app.delete("/delete-recommendation/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await recommendationCollection.deleteOne(query);
       res.send(result);
     });
 
