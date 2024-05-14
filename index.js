@@ -119,10 +119,26 @@ async function run() {
       res.send(result);
     })
 
-    //get recommendations by email
+    //get my recommendations by email
     app.get("/recommendations/user-email/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
+      const tokenEmail = req.user.email;
+      if(tokenEmail !== email){
+        return res.status(403).send({ message: "forbidden access" });
+      }
       const query = {recommenderEmail: email};
+      const result = await recommendationCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    //get recommendations for me by email
+    app.get("/recommendations/query-user/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const tokenEmail = req.user.email;
+      if(tokenEmail !== email){
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      const query = {userEmail: email};
       const result = await recommendationCollection.find(query).toArray();
       res.send(result);
     })
