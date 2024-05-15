@@ -7,11 +7,17 @@ const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
 const app = express();
 
-app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"],
-  credentials: true,
-  optionsSuccessStatus: 200,
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://alt-choice.web.app",
+      "https://alt-choice.firebaseapp.com",
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -35,7 +41,6 @@ const verifyToken = (req, res, next) => {
   console.log(token);
 };
 
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.j6yhdqz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -49,14 +54,14 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const queryCollection = client.db("AltChoiceDB").collection("query");
     const recommendationCollection = client
       .db("AltChoiceDB")
       .collection("recommendation");
 
-      // jwt generate
+    // jwt generate
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -71,8 +76,8 @@ async function run() {
         .send({ success: true });
     });
 
-     //clear token on logout
-     app.get("/logout", (req, res) => {
+    //clear token on logout
+    app.get("/logout", (req, res) => {
       res
         .clearCookie("token", {
           httpOnly: true,
@@ -114,34 +119,42 @@ async function run() {
     //get recommendations by id
     app.get("/recommendations/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {queryId: id};
+      const query = { queryId: id };
       const result = await recommendationCollection.find(query).toArray();
       res.send(result);
-    })
+    });
 
     //get my recommendations by email
-    app.get("/recommendations/user-email/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      const tokenEmail = req.user.email;
-      if(tokenEmail !== email){
-        return res.status(403).send({ message: "forbidden access" });
+    app.get(
+      "/recommendations/user-email/:email",
+      verifyToken,
+      async (req, res) => {
+        const email = req.params.email;
+        const tokenEmail = req.user.email;
+        if (tokenEmail !== email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+        const query = { recommenderEmail: email };
+        const result = await recommendationCollection.find(query).toArray();
+        res.send(result);
       }
-      const query = {recommenderEmail: email};
-      const result = await recommendationCollection.find(query).toArray();
-      res.send(result);
-    })
+    );
 
     //get recommendations for me by email
-    app.get("/recommendations/query-user/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      const tokenEmail = req.user.email;
-      if(tokenEmail !== email){
-        return res.status(403).send({ message: "forbidden access" });
+    app.get(
+      "/recommendations/query-user/:email",
+      verifyToken,
+      async (req, res) => {
+        const email = req.params.email;
+        const tokenEmail = req.user.email;
+        if (tokenEmail !== email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+        const query = { userEmail: email };
+        const result = await recommendationCollection.find(query).toArray();
+        res.send(result);
       }
-      const query = {userEmail: email};
-      const result = await recommendationCollection.find(query).toArray();
-      res.send(result);
-    })
+    );
 
     //post all query
     app.post("/query", async (req, res) => {
@@ -221,7 +234,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
